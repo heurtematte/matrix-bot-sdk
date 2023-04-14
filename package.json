@@ -1,5 +1,5 @@
 {
-  "name": "matrix-bot-sdk",
+  "name": "@heurtematte/matrix-bot-sdk",
   "version": "develop",
   "description": "TypeScript/JavaScript SDK for Matrix bots and appservices",
   "repository": {
@@ -101,5 +101,8 @@
     "testMatch": [
       "<rootDir>/test/**/*Test.ts"
     ]
+  },
+  "publishConfig": {
+    "registry":"https://npm.pkg.github.com/heurtematte"
   }
 }
