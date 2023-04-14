@@ -879,7 +879,11 @@ export class Appservice extends EventEmitter {
                     this.emit("room.message", event["room_id"], event);
                 }
                 if (event['type'] === 'm.room.member' && this.isNamespacedUser(event['state_key'])) {
-                    await this.processMembershipEvent(event);
+                    try{
+                        await this.processMembershipEvent(event);
+                    }catch(e){
+                        LogService.error("Appservice", `ProcessMembershipEvent error on ${event['room_id']} ${event['event_id']}`, e);
+                    }
                 }
                 if (event['type'] === 'm.room.tombstone' && event['state_key'] === '') {
                     this.emit("room.archived", event['room_id'], event);
