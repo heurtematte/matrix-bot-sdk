@@ -19,6 +19,7 @@ jobs:
     #   with:
     #     branch: gh-pages
     #     folder: .jsdoc/matrix-bot-sdk/develop
+    - run: yarn config set npmPublishRegistry 'https://npm.pkg.github.com/'
     - name: Publish package on github packages 📦
       run: yarn publish
       env:  
