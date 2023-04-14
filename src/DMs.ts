@@ -29,6 +29,7 @@ export class DMs {
             this.updateFromAccountData();
         });
         this.client.on("room.invite", (rid, ev) => this.handleInvite(rid, ev));
+        this.ready = this.updateFromAccountData();
     }
 
     private async updateFromAccountData() {
@@ -36,7 +37,7 @@ export class DMs {
         let map = {};
         try {
             map = await this.client.getAccountData("m.direct");
-        } catch (e) {
+        } catch (e:any) {
             if (e.body?.errcode !== "M_NOT_FOUND" && e.statusCode !== 404) {
                 LogService.warn("DMs", "Error getting m.direct account data: ", e);
             }
@@ -53,7 +54,12 @@ export class DMs {
         if (ev['content']?.['is_direct'] === true) {
             const userId = ev['sender'];
             if (!this.cached.has(userId)) this.cached.set(userId, []);
-            this.cached.set(userId, [roomId, ...this.cached.get(userId)]);
+            const cache = this.cached.get(userId);
+            if(cache){
+                this.cached.set(userId, [roomId, ...cache]);
+            }else {
+                this.cached.set(userId, [roomId]);
+            }
             await this.persistCache();
         }
     }
@@ -78,19 +84,19 @@ export class DMs {
                 if (joined.some(m => m.membershipFor === userId)) {
                     toKeep.push(roomId);
                 }
+                if (toKeep.length === currentRooms.length) return; // no change
+        
+                if (toKeep.length > 0) {
+                    this.cached.set(userId, toKeep);
+                } else {
+                    this.cached.delete(userId);
+                }
+                await this.persistCache();
             } catch (e) {
                 LogService.warn("DMs", `Unable to check ${roomId} for room members - assuming invalid DM`);
+                throw e;
             }
         }
-
-        if (toKeep.length === currentRooms.length) return; // no change
-
-        if (toKeep.length > 0) {
-            this.cached.set(userId, toKeep);
-        } else {
-            this.cached.delete(userId);
-        }
-        await this.persistCache();
     }
 
     /**
@@ -142,7 +148,12 @@ export class DMs {
         }
 
         if (!this.cached.has(userId)) this.cached.set(userId, []);
-        this.cached.set(userId, [roomId, ...this.cached.get(userId)]);
+        const cache = this.cached.get(userId);
+        if(cache){
+            this.cached.set(userId, [roomId, ...cache]);
+        }else{
+            this.cached.set(userId, [roomId]);
+        }
         await this.persistCache();
 
         return roomId;
